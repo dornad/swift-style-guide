@@ -1,29 +1,55 @@
 ## Paperless Post iOS Team Swift Style and Conventions
 
-###
-This is an attempt to encourage patterns that accomplish the following goals (in
-rough priority order):
+### Table of Contents
 
- 1. Increased rigor, and decreased likelihood of programmer error
- 1. Increased clarity of intent
- 1. Reduced verbosity
- 1. Fewer debates about aesthetics
-
-If you have suggestions, please see our [contribution guidelines](CONTRIBUTING.md),
-then open a pull request. :zap:
+1. [Intent](#intent)
+1. [Whitespace](#whitespace)
+1. [Conditionals](#conditional-bindings)
+    1. [Bindings](#bindings)
+    1. [If/Else vs. Guard](#ifelse-vs-guard)
+1. [Optionals](#optionals)
+    1. [Force-Unwrapping of Optionals](#force-unwrapping-of-optionals)
+    1. [Implicitly Unwrapped Optionals](#implicitly-unwrapped-optionals)
+1. [Definitions & Declarations](#definitions--declarations)
+    1. [Getters & Setters](#getters--setters)
+    1. [Top-Level Access Control Definitions](#top-level-access-control-definitions)
+    1. [Type Specification](#type-specification)
+    1. [Type Parameters](#type-parameters)
+    1. [Reference to Self](#reference-to-self)
+    1. [Structs vs. Classes](#structs-vs-classes)
+    1. [Final by Default](#final-by-default)
+    1. [Operator Definitions](#operator-definitions)
 
 ----
 
-#### Whitespace
+### Intent
 
- * Tabs, not spaces.
+This is an attempt to encourage patterns that accomplish the following goals (in
+rough priority order):
+
+1. Increased rigor, and decreased likelihood of programmer error
+1. Increased clarity of intent
+1. Reduced verbosity
+1. Fewer debates about aesthetics
+
+---
+
+### Whitespace
+
+ * Spaces not tabs. (4 spaces)
  * End files with a newline.
  * Make liberal use of vertical whitespace to divide code into logical chunks.
  * Don’t leave trailing whitespace.
    * Not even leading indentation on blank lines.
 
+---
 
-#### Prefer `let`-bindings over `var`-bindings wherever possible
+### Conditionals
+
+
+#### Bindings
+
+Prefer let-bindings over var-bindings wherever possible.
 
 Use `let foo = …` over `var foo = …` wherever possible (and when in doubt). Only use `var` if you absolutely have to (i.e. you *know* that the value might change, e.g. when using the `weak` storage modifier).
 
@@ -35,7 +61,10 @@ It becomes easier to reason about code. Had you used `var` while still making th
 
 Accordingly, whenever you see a `var` identifier being used, assume that it will change and ask yourself why.
 
-### Return and break early
+
+#### If/Else vs. Guard
+
+When you have to meet certain criteria to continue execution, try to exit early. So, instead of this:
 
 When you have to meet certain criteria to continue execution, try to exit early. So, instead of this:
 
@@ -57,8 +86,14 @@ guard n.isNumber else {
 
 You can also do it with `if` statement, but using `guard` is prefered, because `guard` statement without `return`, `break` or `continue` produces a compile-time error, so exit is guaranteed.
 
+---
 
-#### Avoid Using Force-Unwrapping of Optionals
+### Optionals
+
+
+#### Force-Unwrapping of Optionals
+
+Avoid Using force-unwrapping of optionals.
 
 If you have an identifier `foo` of type `FooType?` or `FooType!`, don't force-unwrap it to get to the underlying value (`foo!`) if possible.
 
@@ -81,13 +116,23 @@ foo?.callSomethingIfFooIsNotNil()
 
 _Rationale:_ Explicit `if let`-binding of optionals results in safer code. Force unwrapping is more prone to lead to runtime crashes.
 
-#### Avoid Using Implicitly Unwrapped Optionals
+
+#### Implicitly Unwrapped Optionals
+
+Avoid using implicitly unwrapped optionals
 
 Where possible, use `let foo: FooType?` instead of `let foo: FooType!` if `foo` may be nil (Note that in general, `?` can be used instead of `!`).
 
 _Rationale:_ Explicit optionals result in safer code. Implicitly unwrapped optionals have the potential of crashing at runtime.
 
-#### Prefer implicit getters on read-only properties and subscripts
+---
+
+### Definitions & Declarations
+
+
+#### Getters & Setters
+
+Prefer implicit getters on read-only properties and subscripts.
 
 When possible, omit the `get` keyword on read-only computed properties and
 read-only subscripts.
@@ -96,7 +141,7 @@ So, write these:
 
 ```swift
 var myGreatProperty: Int {
-	return 4
+    return 4
 }
 
 subscript(index: Int) -> T {
@@ -108,9 +153,9 @@ subscript(index: Int) -> T {
 
 ```swift
 var myGreatProperty: Int {
-	get {
-		return 4
-	}
+    get {
+        return 4
+    }
 }
 
 subscript(index: Int) -> T {
@@ -122,7 +167,10 @@ subscript(index: Int) -> T {
 
 _Rationale:_ The intent and meaning of the first version is clear, and results in less code.
 
-#### Always specify access control explicitly for top-level definitions
+
+#### Top-Level Access Control Definitions
+
+Always specify access control explicitly for top-level definitions.
 
 Top-level functions, types, and variables should always have explicit access control specifiers:
 
@@ -136,13 +184,16 @@ However, definitions within those can leave access control implicit, where appro
 
 ```swift
 internal struct TheFez {
-	var owner: Person = Joshaber()
+    var owner: Person = Joshaber()
 }
 ```
 
 _Rationale:_ It's rarely appropriate for top-level definitions to be specifically `internal`, and being explicit ensures that careful thought goes into that decision. Within a definition, reusing the same access control specifier is just duplicative, and the default is usually reasonable.
 
-#### When specifying a type, always associate the colon with the identifier
+
+#### Type Specification
+
+When specifying a type, always associate the colon with the identifier.
 
 When specifying the type of an identifier, always put the colon immediately
 after the identifier, followed by a space and then the type name.
@@ -165,17 +216,49 @@ after the key type, followed by a space and then the value type.
 let capitals: [Country: City] = [ Sweden: Stockholm ]
 ```
 
-#### Only explicitly refer to `self` when required
+
+#### Type Parameters
+
+Omit type parameters where possible.
+
+Methods of parameterized types can omit type parameters on the receiving type when they’re identical to the receiver’s. For example:
+
+```swift
+struct Composite<T> {
+    …
+    func compose(other: Composite<T>) -> Composite<T> {
+        return Composite<T>(self, other)
+    }
+}
+```
+
+could be rendered as:
+
+```swift
+struct Composite<T> {
+    …
+    func compose(other: Composite) -> Composite {
+        return Composite(self, other)
+    }
+}
+```
+
+_Rationale:_ Omitting redundant type parameters clarifies the intent, and makes it obvious by contrast when the returned type takes different type parameters.
+
+
+#### Reference to Self
+
+Only explicitly refer to `self` when required.
 
 When accessing properties or methods on `self`, leave the reference to `self` implicit by default:
 
 ```swift
 private class History {
-	var events: [Event]
+    var events: [Event]
 
-	func rewrite() {
-		events = []
-	}
+    func rewrite() {
+        events = []
+    }
 }
 ```
 
@@ -183,21 +266,24 @@ Only include the explicit keyword when required by the language—for example, i
 
 ```swift
 extension History {
-	init(events: [Event]) {
-		self.events = events
-	}
+    init(events: [Event]) {
+        self.events = events
+    }
 
-	var whenVictorious: () -> () {
-		return {
-			self.rewrite()
-		}
-	}
+    var whenVictorious: () -> () {
+        return {
+            self.rewrite()
+        }
+    }
 }
 ```
 
 _Rationale:_ This makes the capturing semantics of `self` stand out more in closures, and avoids verbosity elsewhere.
 
-#### Prefer structs over classes
+
+#### Structs vs. Classes
+
+Prefer structs over classes.
 
 Unless you require functionality that can only be provided by a class (like identity or deinitializers), implement a struct instead.
 
@@ -253,40 +339,19 @@ struct Car: Vehicle {
 
 _Rationale:_ Value types are simpler, easier to reason about, and behave as expected with the `let` keyword.
 
-#### Make classes `final` by default
+
+#### Final by Default
+
+Make classes `final` by default.
 
 Classes should start as `final`, and only be changed to allow subclassing if a valid need for inheritance has been identified. Even in that case, as many definitions as possible _within_ the class should be `final` as well, following the same rules.
 
 _Rationale:_ Composition is usually preferable to inheritance, and opting _in_ to inheritance hopefully means that more thought will be put into the decision.
 
 
-#### Omit type parameters where possible
+#### Operator Definitions
 
-Methods of parameterized types can omit type parameters on the receiving type when they’re identical to the receiver’s. For example:
-
-```swift
-struct Composite<T> {
-	…
-	func compose(other: Composite<T>) -> Composite<T> {
-		return Composite<T>(self, other)
-	}
-}
-```
-
-could be rendered as:
-
-```swift
-struct Composite<T> {
-	…
-	func compose(other: Composite) -> Composite {
-		return Composite(self, other)
-	}
-}
-```
-
-_Rationale:_ Omitting redundant type parameters clarifies the intent, and makes it obvious by contrast when the returned type takes different type parameters.
-
-#### Use whitespace around operator definitions
+Use whitespace around operator definitions.
 
 Use whitespace around operators when defining them. Instead of:
 
