@@ -14,14 +14,21 @@
     * [Getters & Setters](#getters--setters)
     * [Top-Level Access Control Definitions](#top-level-access-control-definitions)
     * [Private Variable Prefixing](#private-variable-prefixing)
+    * [Conditional Assignment](#conditional-assignment)
     * [Type Specification](#type-specification)
     * [Type Parameters](#type-parameters)
     * [Reference to Self](#reference-to-self)
     * [Protocols First](#protocols-first)
     * [Structs vs. Classes](#structs-vs-classes)
+    * [Protocol Conformance](#protocol-conformance)
     * [Enum Cases](#enum-cases)
     * [Final by Default](#final-by-default)
     * [Operator Definitions](#operator-definitions)
+
+#### _Acknowledgments:_
+
+* [Github Swift Style Guide](https://github.com/github/swift-style-guide)
+* [raywenderlich.com Swift Style Guide](https://github.com/raywenderlich/swift-style-guide)
 
 -----
 
@@ -39,13 +46,15 @@ rough priority order):
 
 ### Whitespace
 
- * Spaces not tabs.
-   * 4 spaces.
-   * Spaces are uniform, tabs not always
- * End files with a newline.
- * Make liberal use of vertical whitespace to divide code into logical chunks.
- * Don’t leave trailing whitespace.
-   * Not even leading indentation on blank lines.
+* Spaces not tabs.
+    * 4 spaces.
+    * Spaces are uniform, tabs not always
+* End files with a newline.
+* Make liberal use of vertical whitespace to divide code into logical chunks.
+* Don’t leave trailing whitespace.
+    * Not even leading indentation on blank lines.
+* Always include 1 space after a colon.
+    * var myType: MyType = getMyType(fromString: "MyType")
 
 -----
 
@@ -205,6 +214,32 @@ internal struct MyDemoStruct {
 ```
 
 _Rationale:_ We can recognize the access specification of attributes and methods inline resulting in clearer code.
+
+#### Conditional Assignment
+
+Prefer immutability and closures for conditional assignments.
+
+```swift
+// Bad!
+var isCompleteText: String
+
+if self.isComplete {
+    isCompleteText = "Complete!"
+} else {
+    isCompleteText = "Incomplete!"
+}
+
+// Good!
+let isCompleteText = {
+    if self.isComplete {
+        return "Complete!"
+    } else {
+        return "Incomplete!"
+    }
+}()
+```
+
+_Rationale:_ Immutable values are safer than their mutable comrades. Closures create visual blocks for conditional assignments, improving readability and reducing clutter.
 
 #### Type Specification
 
@@ -391,9 +426,31 @@ struct Car: Vehicle {
 
 _Rationale:_ Value types are simpler, easier to reason about, and behave as expected with the `let` keyword.
 
+#### Protocol Conformance
+
+When possible define protocol conformance in an extension.
+
+For example:
+
+```
+class MyAwesomeClass {}
+
+extension MyAwesomeClass: UITableViewDelegate {
+    // implemented functionality
+}
+
+extension MyAwesomeClass: UITableViewDatasource {
+    // implemented functionality
+}
+```
+
+_Rationale:_ Protocol conformances in separate per conformance extensions separates code in logical chunks based on responsibilities. 
+
 #### Enum Cases
 
 Never provide a default case for type switching on enumerations unless absolutely intentional/necessary.
+
+For example:
 
 ```swift
 enum MyAmazingType {
