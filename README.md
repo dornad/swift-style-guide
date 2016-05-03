@@ -5,22 +5,25 @@
 1. [Intent](#intent)
 1. [Whitespace](#whitespace)
 1. [Conditionals](#conditional-bindings)
-    1. [Bindings](#bindings)
-    1. [If/Else vs. Guard](#ifelse-vs-guard)
+    * [Bindings](#bindings)
+    * [If/Else vs. Guard](#ifelse-vs-guard)
 1. [Optionals](#optionals)
-    1. [Force-Unwrapping of Optionals](#force-unwrapping-of-optionals)
-    1. [Implicitly Unwrapped Optionals](#implicitly-unwrapped-optionals)
+    * [Force-Unwrapping of Optionals](#force-unwrapping-of-optionals)
+    * [Implicitly Unwrapped Optionals](#implicitly-unwrapped-optionals)
 1. [Definitions & Declarations](#definitions--declarations)
-    1. [Getters & Setters](#getters--setters)
-    1. [Top-Level Access Control Definitions](#top-level-access-control-definitions)
-    1. [Type Specification](#type-specification)
-    1. [Type Parameters](#type-parameters)
-    1. [Reference to Self](#reference-to-self)
-    1. [Structs vs. Classes](#structs-vs-classes)
-    1. [Final by Default](#final-by-default)
-    1. [Operator Definitions](#operator-definitions)
+    * [Getters & Setters](#getters--setters)
+    * [Top-Level Access Control Definitions](#top-level-access-control-definitions)
+    * [Private Variable Prefixing](#private-variable-prefixing)
+    * [Type Specification](#type-specification)
+    * [Type Parameters](#type-parameters)
+    * [Reference to Self](#reference-to-self)
+    * [Protocols First](#protocols-first)
+    * [Structs vs. Classes](#structs-vs-classes)
+    * [Enum Cases](#enum-cases)
+    * [Final by Default](#final-by-default)
+    * [Operator Definitions](#operator-definitions)
 
-----
+-----
 
 ### Intent
 
@@ -32,20 +35,21 @@ rough priority order):
 1. Reduced verbosity
 1. Fewer debates about aesthetics
 
----
+------
 
 ### Whitespace
 
- * Spaces not tabs. (4 spaces)
+ * Spaces not tabs.
+   * 4 spaces.
+   * Spaces are uniform, tabs not always
  * End files with a newline.
  * Make liberal use of vertical whitespace to divide code into logical chunks.
  * Don’t leave trailing whitespace.
    * Not even leading indentation on blank lines.
 
----
+-----
 
 ### Conditionals
-
 
 #### Bindings
 
@@ -60,7 +64,6 @@ A `let`-binding guarantees and *clearly signals to the programmer* that its valu
 It becomes easier to reason about code. Had you used `var` while still making the assumption that the value never changed, you would have to manually check that.
 
 Accordingly, whenever you see a `var` identifier being used, assume that it will change and ask yourself why.
-
 
 #### If/Else vs. Guard
 
@@ -84,12 +87,11 @@ guard n.isNumber else {
 // Use n here
 ```
 
-You can also do it with `if` statement, but using `guard` is prefered, because `guard` statement without `return`, `break` or `continue` produces a compile-time error, so exit is guaranteed.
+You can also do it with `if` statement, but using `guard` is preferred, because `guard` statement without `return`, `break` or `continue` produces a compile-time error, so exit is guaranteed.
 
----
+-----
 
 ### Optionals
-
 
 #### Force-Unwrapping of Optionals
 
@@ -116,7 +118,6 @@ foo?.callSomethingIfFooIsNotNil()
 
 _Rationale:_ Explicit `if let`-binding of optionals results in safer code. Force unwrapping is more prone to lead to runtime crashes.
 
-
 #### Implicitly Unwrapped Optionals
 
 Avoid using implicitly unwrapped optionals
@@ -125,10 +126,9 @@ Where possible, use `let foo: FooType?` instead of `let foo: FooType!` if `foo` 
 
 _Rationale:_ Explicit optionals result in safer code. Implicitly unwrapped optionals have the potential of crashing at runtime.
 
----
+-----
 
 ### Definitions & Declarations
-
 
 #### Getters & Setters
 
@@ -167,7 +167,6 @@ subscript(index: Int) -> T {
 
 _Rationale:_ The intent and meaning of the first version is clear, and results in less code.
 
-
 #### Top-Level Access Control Definitions
 
 Always specify access control explicitly for top-level definitions.
@@ -190,6 +189,22 @@ internal struct TheFez {
 
 _Rationale:_ It's rarely appropriate for top-level definitions to be specifically `internal`, and being explicit ensures that careful thought goes into that decision. Within a definition, reusing the same access control specifier is just duplicative, and the default is usually reasonable.
 
+#### Private Variable Prefixing
+
+Prefix private attributes and methods with an underscore `_`.
+
+```swift
+internal struct MyDemoStruct {
+    
+    private let _name = "Demo"
+
+    private func _printName() -> Void {
+        print(_name)
+    }
+}
+```
+
+_Rationale:_ We can recognize the access specification of attributes and methods inline resulting in clearer code.
 
 #### Type Specification
 
@@ -215,7 +230,6 @@ after the key type, followed by a space and then the value type.
 ```swift
 let capitals: [Country: City] = [ Sweden: Stockholm ]
 ```
-
 
 #### Type Parameters
 
@@ -244,7 +258,6 @@ struct Composite<T> {
 ```
 
 _Rationale:_ Omitting redundant type parameters clarifies the intent, and makes it obvious by contrast when the returned type takes different type parameters.
-
 
 #### Reference to Self
 
@@ -280,6 +293,45 @@ extension History {
 
 _Rationale:_ This makes the capturing semantics of `self` stand out more in closures, and avoids verbosity elsewhere.
 
+#### Protocols First
+
+Prefer protocols over structs and classes when possible.
+
+Abstractions of functionality should start with a protocol. As described in [this WWDC talk](https://developer.apple.com/videos/play/wwdc2015/408/), protocol-oriented programming and value-type semantics are the heart of Swift's design.
+
+For example this traditional OOP structure:
+
+```swift
+class Ordered {
+    func precedes(other: Ordered) -> Bool { 
+        fatalError("implement me!") 
+    }
+}
+
+class Number : Ordered {
+    var value: Double = 0
+    override func precedes(other: Ordered) -> Bool {
+        return value < (other as! Number).value
+    }
+}
+```
+
+Becomes much more robust and can be applied retroactively to existing entities through a protocol:
+
+```swift
+protocol Ordered {
+    func precedes(other: Self) -> Bool
+}
+
+struct Number : Ordered {
+    var value: Double = 0
+    func precedes(other: Number) -> Bool {
+        return self.value < other.value
+    }
+}
+```
+
+_Rationale:_ Using protocols helps us circumvent object-oriented issues such implicit sharing, inheritance issues, and lost type relationships. Furthermore protocols allow us to use value types, create static type relationships, and perform retroactive modeling.
 
 #### Structs vs. Classes
 
@@ -339,6 +391,39 @@ struct Car: Vehicle {
 
 _Rationale:_ Value types are simpler, easier to reason about, and behave as expected with the `let` keyword.
 
+#### Enum Cases
+
+Never provide a default case for type switching on enumerations unless absolutely intentional/necessary.
+
+```swift
+enum MyAmazingType {
+    case Amazing
+    case DoubleAmazing
+}
+
+var amazingType = MyAmazingType.Amazing
+
+// Bad!
+switch amazingType {
+
+    case .Amazing:
+        // ...
+    case .DoubleAmazing
+        // ...
+    default:
+        // ...
+}
+
+// Good!
+switch amazingType {
+
+    case .Amazing:
+        // ...
+    case .DoubleAmazing
+        // ...
+}
+```
+_Rationale:_ Providing a default case doesn't take advantage of of the compiler's ability to detect new types and alert you that they're not handled properly.
 
 #### Final by Default
 
@@ -347,7 +432,6 @@ Make classes `final` by default.
 Classes should start as `final`, and only be changed to allow subclassing if a valid need for inheritance has been identified. Even in that case, as many definitions as possible _within_ the class should be `final` as well, following the same rules.
 
 _Rationale:_ Composition is usually preferable to inheritance, and opting _in_ to inheritance hopefully means that more thought will be put into the decision.
-
 
 #### Operator Definitions
 
