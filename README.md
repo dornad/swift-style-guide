@@ -30,6 +30,10 @@
 * [Github Swift Style Guide](https://github.com/github/swift-style-guide)
 * [raywenderlich.com Swift Style Guide](https://github.com/raywenderlich/swift-style-guide)
 
+#### _Contributing:_
+
+To contribute to this style guide, open an issue and a pull request that tracks the issue and addresses the change you would like to see. If a consensus is made to institute the change you may merge your request. 
+
 -----
 
 ### Intent
