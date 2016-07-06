@@ -24,6 +24,7 @@
     * [Enum Cases](#enum-cases)
     * [Final by Default](#final-by-default)
     * [Operator Definitions](#operator-definitions)
+    * [Implement `CustomStringConvertible`](#implement-customstringconvertible)
 
 #### _Acknowledgments:_
 
@@ -513,3 +514,61 @@ func <|< <A>(lhs: A, rhs: A) -> A
 ```
 
 _Rationale:_ Operators consist of punctuation characters, which can make them difficult to read when immediately followed by the punctuation for a type or value parameter list. Adding whitespace separates the two more clearly.
+
+#### Implement `CustomStringConvertible`
+
+If your type requires a `String` representation, adopt `CustomStringConvertible`.  Instead of:
+
+```swift
+@objc public enum Foo: Int {
+   case Baz: 0
+   case Bap
+   case Bar
+   
+   func asString() -> String {
+      switch self {
+         case .Baz:
+            return "Baz"
+         case .Bap:
+            return "Bap"
+         case .Bar:
+            return "Bar"
+   }
+}
+
+print("the enum value is \(Foo.Bar.asString())") // prints "the enum value is Bar"
+```
+
+write:
+
+```swift
+
+private struct Constants {
+   static let Baz = "Baz"
+   static let Bap = "Bap"
+   static let Bar = "Bar"
+}
+
+@objc public enum Foo: Int {
+   case Baz: 0
+   case Bap
+   case Bar
+}
+
+extension Foo: CustomStringConvertible {
+   public var description: String {
+      switch self {
+         case .Baz:
+            return Constants.Baz
+         case .Bap:
+            return Constants.Bap
+         case .Bar:
+            return Constants.Bar
+   }
+}
+
+print("the enum value is \(Foo.Bar)") // prints "the enum value is Bar"
+```
+
+_Rationale:_ Swift has inherited the `description` (and `debugDescription`) method API from Objective-C, which is useful for providing a meaningful `String` description of instances.  These API are available in `CustomStringConvertible` and `CustomDebugStringConvertible`.
+
